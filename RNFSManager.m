@@ -441,6 +441,19 @@ RCT_EXPORT_METHOD(copyFile:(NSString *)filepath
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
+  if ([filepath containsString:@"ph://"]) {
+    NSString *newPath = [filepath substringWithRange:NSMakeRange(5, 41)];    
+    PHAsset *asset = [PHAsset fetchAssetsWithLocalIdentifiers:@[newPath] options:nil].lastObject;
+    [asset requestContentEditingInputWithOptions:[PHContentEditingInputRequestOptions new] completionHandler:^(PHContentEditingInput *contentEditingInput, NSDictionary *info) {
+      NSURL *imagePath = contentEditingInput.fullSizeImageURL;
+      NSFileManager *manager = [NSFileManager defaultManager];
+      NSError *error = nil;
+      BOOL success = [manager copyItemAtPath: imagePath toPath:destPath error:&error];
+      resolve(nil);
+    }];
+    return;
+  }
+  
   NSFileManager *manager = [NSFileManager defaultManager];
 
   NSError *error = nil;
